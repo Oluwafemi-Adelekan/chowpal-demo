@@ -73,6 +73,11 @@ ${JSON.stringify(menuItems)}
 [Your helpful text response with markdown formatting] ||| [Array of Item IDs]
 `;
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.post('/api/chat', async (req, res) => {
     try {
         const { message, history = [], sessionId = 'default' } = req.body;
