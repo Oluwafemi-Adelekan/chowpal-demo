@@ -60,7 +60,7 @@ const ChatView = ({ onNavigate }) => {
 
     const loadHistory = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/history?sessionId=default');
+            const res = await fetch('/api/history?sessionId=default');
             const data = await res.json();
 
             if (data.length > 0) {
@@ -84,7 +84,7 @@ const ChatView = ({ onNavigate }) => {
         setIsLoading(true);
         setShowHistoryDrawer(false);
         try {
-            const res = await fetch(`http://localhost:3000/api/history?sessionId=${sessionId}`);
+            const res = await fetch(`/api/history?sessionId=${sessionId}`);
             const data = await res.json();
 
             const formatted = data.map(m => ({
@@ -126,7 +126,7 @@ const ChatView = ({ onNavigate }) => {
         setIsLoading(true);
 
         try {
-            const res = await fetch('http://localhost:3000/api/chat', {
+            const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
