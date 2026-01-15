@@ -1,7 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
-const { AzureOpenAI } = require("openai");
+
+// Only load dotenv in development (Vercel uses env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
 
 const app = express();
 
@@ -36,9 +39,14 @@ const apiKey = process.env.AZURE_OPENAI_API_KEY;
 const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
 const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
-let client;
-if (apiKey && endpoint && deployment) {
-    client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+let client = null;
+try {
+    if (apiKey && endpoint && deployment) {
+        const { AzureOpenAI } = require("openai");
+        client = new AzureOpenAI({ endpoint, apiKey, apiVersion, deployment });
+    }
+} catch (err) {
+    console.error("Failed to initialize AzureOpenAI client:", err.message);
 }
 
 const systemPrompt = `You are Chowpal, the official AI food assistant for Chowdeck in Lagos, Nigeria.
