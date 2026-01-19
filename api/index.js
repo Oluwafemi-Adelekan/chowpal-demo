@@ -34,6 +34,15 @@ const menuItems = [
     { id: 115, name: "Grilled Catfish", price: 9000, vendorName: "Mega Chicken", description: "Whole grilled catfish with spicy sauce.", image: "/courses/catfish.png" },
 ];
 
+const sponsoredItems = [
+    { id: 901, name: "Ember Co. Hot Sauce", price: 6000, vendorName: "Harvest Groceries", description: "Spicy kick for your meal. In stock.", image: "/courses/sauce.png", sponsored: true },
+    { id: 902, name: "Coca-Cola Zero", price: 500, vendorName: "Coca-Cola", description: "Zero sugar, zero calories.", image: "/courses/coke_zero.png", sponsored: true },
+    { id: 903, name: "Desert Cottages", price: 150000, vendorName: "Pueblo & Pine", description: "Expansive residences with desert vistas.", image: "/courses/cottage.png", sponsored: true } // From screenshot reference
+];
+
+// Combine for AI context, but keep separate for logic if needed
+const allContextItems = [...menuItems, ...sponsoredItems];
+
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
 const apiKey = process.env.AZURE_OPENAI_API_KEY;
 const apiVersion = process.env.AZURE_OPENAI_API_VERSION;
@@ -52,30 +61,29 @@ try {
 const systemPrompt = `You are Chowpal, the official AI food assistant for Chowdeck in Lagos, Nigeria.
 
 **DATA SOURCE:**
-You have access to the following MENU ITEMS from top Lagos restaurants (The Place, Mega Chicken, Ocean Basket, etc.):
+You have access to the following MENU ITEMS:
 ${JSON.stringify(menuItems)}
+
+And the following SPONSORED ITEMS (Ads):
+${JSON.stringify(sponsoredItems)}
 
 **CORE INSTRUCTIONS:**
 1. **Food Recommendations**:
-    - Suggest items explicitly from the MENU ITEMS list above.
-    - If suggesting specific items, you MUST append a JSON array of their IDs at the VERY end of your response like this: \` ||| [102, 114]\`
-    - Do not invent items. If you can't find a perfect match, suggest the closest option or ask for clarification.
+    - Suggest items explicitly from the MENU ITEMS list.
+    - If suggesting specific items, you MUST append a JSON array of their IDs at the VERY end of your response like this: \` ||| [102, 114, 901]\`
+    - Do not invent items.
 
-2. **Meal Planning**:
-    - If asked for a "Weekly Meal Plan", provide a CONCISE plan (Mon-Fri).
-    - Format: "**Day**: Lunch Item, Dinner Item".
-    - KEEP IT SHORT to avoid timeouts.
-    - Example:
-      **Mon**: Jollof Rice (Lunch), Meat Pie (Dinner)
-    - Append recommended item IDs at the end.
+2. **Sponsored Ads (IMPORTANT)**:
+    - You are encouraged to suggest *relevant* SPONSORED ITEMS alongside organic results.
+    - Do NOT force them. If the user asks for "Water", suggesting "Coca-Cola Zero" is relevant. If they ask for "Pizza", "Hot Sauce" is relevant.
+    - Verify relevance before suggesting.
+    - These items are internally marked as sponsored, you just need to include their IDs in the list.
 
-3. **Topic Restrictions**:
-    - You ONLY discuss food, drinks, dining, and Chowdeck ordering.
-    - Politely refuse off-topic questions (e.g., "I'm just a food foodie! Ask me about Jollof instead.").
+3. **Multimodal (Images)**:
+    - The user may send an image of food. Identify it and suggest matching items from the menu.
 
 4. **Tone**: 
-    - Friendly, helpful, Nigerian-aware (knows what Egusi, Asun, etc. are).
-    - Concise but descriptive.
+    - Friendly, helpful, Nigerian-aware.
 
 **RESPONSE FORMAT REMINDER:**
 [Your helpful text response with markdown formatting] ||| [Array of Item IDs]
@@ -88,13 +96,13 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
     try {
-        const { message, history = [], sessionId = 'default' } = req.body;
+        const { message, history = [], sessionId = 'default', image } = req.body;
 
         if (!client) {
             return res.status(200).json({ text: "I'm having trouble confirming my identity (API Key missing). I can't chat right now, but you can still order items!" });
         }
 
-        console.log(`[INFO] Processing message: "${message.substring(0, 50)}..."`);
+        console.log(`[INFO] Processing message: "${message ? message.substring(0, 50) : 'Image only'}..."`);
 
         const messages = [
             { role: "system", content: systemPrompt }
@@ -105,7 +113,18 @@ app.post('/api/chat', async (req, res) => {
             messages.push({ role: h.sender === 'user' ? 'user' : 'assistant', content: h.text });
         });
 
-        messages.push({ role: "user", content: message });
+        // Handle text + optional image
+        if (image) {
+            messages.push({
+                role: "user",
+                content: [
+                    { type: "text", text: message || "What is in this image?" },
+                    { type: "image_url", image_url: { url: image } } // image must be base64 data URI
+                ]
+            });
+        } else {
+            messages.push({ role: "user", content: message });
+        }
 
         const MAX_RETRIES = 3;
         let lastError = null;
@@ -126,14 +145,14 @@ app.post('/api/chat', async (req, res) => {
                 if (parts.length > 1) {
                     try {
                         const ids = JSON.parse(parts[1].trim());
-                        recommendedItems = menuItems.filter(item => ids.includes(item.id));
+                        recommendedItems = allContextItems.filter(item => ids.includes(item.id));
                     } catch (e) {
                         console.warn("Failed to parse JSON IDs from AI response");
                     }
                 }
 
                 if (!sessions[sessionId]) sessions[sessionId] = [];
-                const newEntryUser = { id: Date.now(), text: message, sender: 'user', timestamp: new Date() };
+                const newEntryUser = { id: Date.now(), text: message || "Sent an image", sender: 'user', timestamp: new Date(), image: image }; // store image in history? logic only stores text usually, but ok.
                 const newEntryAi = { id: Date.now() + 1, text: displayText, sender: 'ai', timestamp: new Date(), cards: recommendedItems };
 
                 sessions[sessionId].push(newEntryUser);
