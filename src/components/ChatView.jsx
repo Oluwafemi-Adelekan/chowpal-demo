@@ -45,6 +45,7 @@ const parseMarkdown = (text) => {
 
     // Clean up the text
     const cleanText = text
+        .replace(/^#{1,3}\s+/gm, '')       // Remove markdown headers (##, ###)
         .replace(/- /g, '\n• ')            // Convert dashes to bullets with newline
         .replace(/\n\n/g, '\n')            // Reduce double newlines
         .trim();
@@ -458,86 +459,80 @@ const ChatView = ({ onNavigate }) => {
                                     {parseMarkdown(msg.text)}
                                 </div>
                                 {msg.cards && msg.cards.length > 0 && (
-                                    <>
+                                    <div style={{ display: 'flex', gap: 12, marginTop: 12, overflowX: 'auto', paddingBottom: 8, maxWidth: '100%', alignItems: 'stretch' }}>
                                         {/* Regular (non-sponsored) cards */}
-                                        {msg.cards.filter(c => !c.sponsored).length > 0 && (
-                                            <div style={{ display: 'flex', gap: 12, marginTop: 12, overflowX: 'auto', paddingBottom: 8, maxWidth: '100%' }}>
-                                                {msg.cards.filter(c => !c.sponsored).map((card, i) => (
-                                                    <div key={i} style={{
-                                                        minWidth: 200, width: 200,
-                                                        background: '#fff', borderRadius: 16, overflow: 'hidden',
-                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                                                        display: 'flex', flexDirection: 'column'
-                                                    }}>
-                                                        <div style={{ height: 120, background: `url(${card.image}) center/cover`, backgroundColor: '#f3f4f6' }}></div>
-                                                        <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                            <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#111' }}>{card.name}</p>
-                                                            <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>₦{card.price.toLocaleString()}</p>
-                                                            <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
-                                                                <button
-                                                                    onClick={() => handleAddToCart(card)}
-                                                                    style={{ flex: 1, padding: '8px', background: '#E8F5F1', color: '#0C513F', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
-                                                                >
-                                                                    <ShoppingBag size={14} /> Add
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleBuyNow(card)}
-                                                                    style={{ flex: 1, padding: '8px', background: '#0C513F', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
-                                                                >
-                                                                    Buy <ArrowRight size={14} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                        {msg.cards.filter(c => !c.sponsored).map((card, i) => (
+                                            <div key={`reg-${i}`} style={{
+                                                minWidth: 200, width: 200, minHeight: 280, flexShrink: 0,
+                                                background: '#fff', borderRadius: 16, overflow: 'hidden',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                                display: 'flex', flexDirection: 'column'
+                                            }}>
+                                                <div style={{ height: 120, background: `url(${card.image}) center/cover`, backgroundColor: '#f3f4f6' }}></div>
+                                                <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                                    <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#111' }}>{card.name}</p>
+                                                    <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>₦{card.price.toLocaleString()}</p>
+                                                    <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
+                                                        <button
+                                                            onClick={() => handleAddToCart(card)}
+                                                            style={{ flex: 1, padding: '8px', background: '#E8F5F1', color: '#0C513F', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
+                                                        >
+                                                            <ShoppingBag size={14} /> Add
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleBuyNow(card)}
+                                                            style={{ flex: 1, padding: '8px', background: '#0C513F', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
+                                                        >
+                                                            Buy <ArrowRight size={14} />
+                                                        </button>
                                                     </div>
-                                                ))}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Ads vertical divider - fills full height */}
+                                        {msg.cards.filter(c => c.sponsored).length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingLeft: 8, paddingRight: 8, flexShrink: 0, alignSelf: 'stretch' }}>
+                                                <div style={{ width: 1, flex: 1, background: '#D1D5DB' }}></div>
+                                                <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', padding: '8px 0', whiteSpace: 'nowrap' }}>Ads</span>
+                                                <div style={{ width: 1, flex: 1, background: '#D1D5DB' }}></div>
                                             </div>
                                         )}
 
-                                        {/* Sponsored cards - with clear separator */}
-                                        {msg.cards.filter(c => c.sponsored).length > 0 && (
-                                            <div style={{ marginTop: 24, width: '100%' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, width: '100%' }}>
-                                                    <div style={{ flex: 1, height: 1, background: '#D1D5DB' }}></div>
-                                                    <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Sponsored suggestions</span>
-                                                    <div style={{ flex: 1, height: 1, background: '#D1D5DB' }}></div>
-                                                </div>
-                                                <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, maxWidth: '100%' }}>
-                                                    {msg.cards.filter(c => c.sponsored).map((card, i) => (
-                                                        <div key={i} style={{
-                                                            minWidth: 200, width: 200,
-                                                            background: '#fff', borderRadius: 16, overflow: 'hidden',
-                                                            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                                                            display: 'flex', flexDirection: 'column'
-                                                        }}>
-                                                            <div style={{ height: 120, background: `url(${card.image}) center/cover`, backgroundColor: '#f3f4f6' }}></div>
-                                                            <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                                <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#111' }}>{card.name}</p>
-                                                                <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>₦{card.price.toLocaleString()}</p>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                                                                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }}></div>
-                                                                    <span style={{ fontSize: 12, fontWeight: 600, color: '#EF4444' }}>Sponsored</span>
-                                                                </div>
-                                                                <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
-                                                                    <button
-                                                                        onClick={() => handleAddToCart(card)}
-                                                                        style={{ flex: 1, padding: '8px', background: '#E8F5F1', color: '#0C513F', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
-                                                                    >
-                                                                        <ShoppingBag size={14} /> Add
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleBuyNow(card)}
-                                                                        style={{ flex: 1, padding: '8px', background: '#0C513F', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
-                                                                    >
-                                                                        Buy <ArrowRight size={14} />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                        {/* Sponsored cards */}
+                                        {msg.cards.filter(c => c.sponsored).map((card, i) => (
+                                            <div key={`sp-${i}`} style={{
+                                                minWidth: 200, width: 200, minHeight: 280, flexShrink: 0,
+                                                background: '#fff', borderRadius: 16, overflow: 'hidden',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                                                display: 'flex', flexDirection: 'column'
+                                            }}>
+                                                <div style={{ height: 120, background: `url(${card.image}) center/cover`, backgroundColor: '#f3f4f6' }}></div>
+                                                <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                                    <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: '#111' }}>{card.name}</p>
+                                                    <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>₦{card.price.toLocaleString()}</p>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                                                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }}></div>
+                                                        <span style={{ fontSize: 12, fontWeight: 600, color: '#EF4444' }}>Sponsored</span>
+                                                    </div>
+                                                    <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
+                                                        <button
+                                                            onClick={() => handleAddToCart(card)}
+                                                            style={{ flex: 1, padding: '8px', background: '#E8F5F1', color: '#0C513F', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
+                                                        >
+                                                            <ShoppingBag size={14} /> Add
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleBuyNow(card)}
+                                                            style={{ flex: 1, padding: '8px', background: '#0C513F', color: '#fff', borderRadius: 8, fontWeight: 600, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, border: 'none', cursor: 'pointer' }}
+                                                        >
+                                                            Buy <ArrowRight size={14} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        )}
-                                    </>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         ))}
