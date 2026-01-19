@@ -35,9 +35,9 @@ const menuItems = [
 ];
 
 const sponsoredItems = [
-    { id: 901, name: "Ember Co. Hot Sauce", price: 6000, vendorName: "Harvest Groceries", description: "Spicy kick for your meal. In stock.", image: "/courses/sauce.png", sponsored: true },
+    { id: 901, name: "Ember Co. Hot Sauce", price: 6000, vendorName: "Harvest Groceries", description: "Spicy kick for your meal. In stock.", image: "/courses/asun_goat.png", sponsored: true },
     { id: 902, name: "Coca-Cola Zero", price: 500, vendorName: "Coca-Cola", description: "Zero sugar, zero calories.", image: "/courses/coke_zero.png", sponsored: true },
-    { id: 903, name: "Desert Cottages", price: 150000, vendorName: "Pueblo & Pine", description: "Expansive residences with desert vistas.", image: "/courses/cottage.png", sponsored: true } // From screenshot reference
+    { id: 903, name: "Grilled Catfish Special", price: 9500, vendorName: "Sponsored Partner", description: "Premium grilled catfish with plantain.", image: "/courses/catfish.png", sponsored: true }
 ];
 
 // Combine for AI context, but keep separate for logic if needed
